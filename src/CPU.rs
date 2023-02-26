@@ -70,13 +70,29 @@ impl CPU {
         }
     }
 
+    // Loads a byte of memory (value) into the accumulator
+    // and sets the zero and negative flags as appropriate
     fn lda(&mut self, value: u8) {
         self.register_a = value;
         self.update_zero_and_negative_flags(self.register_a);
     }
 
+    // Copies the current contents of the accumulator into the X register
+    // and sets the zero and negative flags as appropriate
     fn tax(&mut self) {
         self.register_x = self.register_a;
+        self.update_zero_and_negative_flags(self.register_x);
+    }
+
+    // Adds one to the X register
+    // and sets the zero and negative flags as appropriate
+    fn inx(&mut self) {
+        if self.register_x == 0xFF {
+            self.register_x = 0;
+            return;
+        }
+
+        self.register_x += 1;
         self.update_zero_and_negative_flags(self.register_x);
     }
 
@@ -103,6 +119,7 @@ impl CPU {
 
                 // INX
                 // X,Z,N = X+1
+                0xE8 => self.inx(),
 
                 // BRK
                 // stop execution
@@ -147,21 +164,21 @@ mod tests {
     }
 
     #[test]
-    // fn test_5_ops_working_together() {
-    //     let mut cpu = CPU::new();
-    //     cpu.interpret(vec![0xa9, 0xc0, 0xaa, 0xe8, 0x00]);
+    fn test_5_ops_working_together() {
+        let mut cpu = CPU::new();
+        cpu.interpret(vec![0xa9, 0xc0, 0xaa, 0xe8, 0x00]);
 
-    //     assert_eq!(cpu.register_x, 0xc1)
-    // }
+        assert_eq!(cpu.register_x, 0xc1)
+    }
 
-    // #[test]
-    // fn test_inx_overflow() {
-    //     let mut cpu = CPU::new();
-    //     cpu.register_x = 0xff;
-    //     cpu.interpret(vec![0xe8, 0xe8, 0x00]);
+    #[test]
+    fn test_inx_overflow() {
+        let mut cpu = CPU::new();
+        cpu.register_x = 0xff;
+        cpu.interpret(vec![0xe8, 0xe8, 0x00]);
 
-    //     assert_eq!(cpu.register_x, 1)
-    // }
+        assert_eq!(cpu.register_x, 1)
+    }
     #[test]
     fn break_sets_break_register() {
         let mut cpu = CPU::new();
