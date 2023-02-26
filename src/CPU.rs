@@ -21,6 +21,10 @@ pub struct CPU {
     // processor status
     // 8-bit register represents 7 status flags that can be
     // set or unset depending on the result of the last executed instruction
+    //
+    // In order from right to left,
+    // Carry Flag, Zero Flag, Interrupt Disable, Decimal Mode Flag
+    // Break Command, Overflow Flag, Negative Flag
     pub status: u8,
 
     // program counter
@@ -61,6 +65,8 @@ impl CPU {
             self.program_counter += 1;
 
             match opscode {
+                // LDA
+                // A,Z,N = M
                 0xA9 => {
                     let param = program[self.program_counter as usize];
                     self.program_counter += 1;
@@ -79,7 +85,23 @@ impl CPU {
                     }
                 }
 
-                0xAA => {}
+                // TAX
+                // X = A
+                0xAA => {
+                    self.register_x = self.register_a;
+
+                    if self.register_x == 0 {
+                        self.status |= 0b0000_0010;
+                    } else {
+                        self.status &= 0b1111_1101;
+                    }
+
+                    if self.register_x & 0b_1000_0000 != 0 {
+                        self.status |= 0b1000_0000;
+                    } else {
+                        self.status &= 0b0111_1111;
+                    }
+                }
 
                 0x00 => return,
 
