@@ -12,7 +12,7 @@ pub struct CPU {
 // Repeat the cycle
 
 impl CPU {
-    pub fn new() -> Self {
+    pub fn new() -> CPU {
         CPU {
             register_a: 0,
             status: 0,
@@ -56,7 +56,7 @@ impl CPU {
 }
 
 #[cfg(test)]
-mod test {
+mod tests {
     use super::*;
 
     #[test]
