@@ -85,14 +85,28 @@ impl CPU {
         self.mem_write(pos + 1, hi);
     }
 
+    // inserting a new cartridge -> CPU receives a special signal called "Reset interrupt"
+    // instructs CPU to:
+    // - reset the state (registers and flags)
+    // - set program_counter to the 16-bit address that is stored at 0xFFFC
+    pub fn reset(&mut self) {
+        self.register_a = 0;
+        self.register_x = 0;
+        self.status = 0;
+
+        self.program_counter = self.mem_read_u16(0xFFFC);
+    }
+
     pub fn load_and_run(&mut self, program: Vec<u8>) {
         self.load(program);
+        self.reset();
         self.run()
     }
 
     pub fn load(&mut self, program: Vec<u8>) {
         // [0x8000 .. 0xFFFF] is reserved for Program ROM
         self.memory[0x8000..(0x8000 + program.len())].copy_from_slice(&program[..]);
+        self.mem_write_u16(0xFFFC, 0x8000);
         self.program_counter = 0x8000;
     }
 
