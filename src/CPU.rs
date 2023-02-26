@@ -58,15 +58,15 @@ impl CPU {
 
     fn update_zero_and_negative_flags(&mut self, result: u8) {
         if result == 0 {
-            self.status = self.status | 0b0000_0010;
+            self.status |= 0b0000_0010;
         } else {
-            self.status = self.status & 0b1111_1101;
+            self.status &= 0b1111_1101;
         }
 
         if result & 0b1000_0000 != 0 {
-            self.status = self.status | 0b1000_0000;
+            self.status |= 0b1000_0000;
         } else {
-            self.status = self.status & 0b0111_1111;
+            self.status &= 0b0111_1111;
         }
     }
 
@@ -101,7 +101,15 @@ impl CPU {
                 // X = A
                 0xAA => self.tax(),
 
-                0x00 => return,
+                // INX
+                // X,Z,N = X+1
+
+                // BRK
+                // stop execution
+                0x00 => {
+                    self.status |= 0b0010_0000;
+                    return;
+                }
 
                 _ => todo!(),
             }
@@ -136,5 +144,28 @@ mod tests {
         cpu.interpret(vec![0xaa, 0x00]);
 
         assert_eq!(cpu.register_x, 10)
+    }
+
+    #[test]
+    // fn test_5_ops_working_together() {
+    //     let mut cpu = CPU::new();
+    //     cpu.interpret(vec![0xa9, 0xc0, 0xaa, 0xe8, 0x00]);
+
+    //     assert_eq!(cpu.register_x, 0xc1)
+    // }
+
+    // #[test]
+    // fn test_inx_overflow() {
+    //     let mut cpu = CPU::new();
+    //     cpu.register_x = 0xff;
+    //     cpu.interpret(vec![0xe8, 0xe8, 0x00]);
+
+    //     assert_eq!(cpu.register_x, 1)
+    // }
+    #[test]
+    fn break_sets_break_register() {
+        let mut cpu = CPU::new();
+        cpu.interpret(vec![0x00]);
+        assert_ne!(cpu.status & 0b0010_0000, 0);
     }
 }
