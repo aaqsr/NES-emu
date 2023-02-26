@@ -30,6 +30,9 @@ pub struct CPU {
     // program counter
     // holds the address for the next machine language instruction
     pub program_counter: u16,
+
+    // temporary ram
+    memory: [u8; 0xFFFF],
 }
 
 // CPU works in a constant cycle:
@@ -53,7 +56,26 @@ impl CPU {
             register_y: 0,
             status: 0,
             program_counter: 0,
+            memory: [0; 0xFFFF],
         }
+    }
+
+    fn mem_read(&self, addr: u16) -> u8 {
+        self.memory[addr as usize]
+    }
+
+    fn mem_write(&mut self, addr: u16, data: u8) {
+        self.memory[addr as usize] = data;
+    }
+
+    pub fn load_and_run(&mut self, program: Vec<u8>) {
+        self.load(program);
+        self.run()
+    }
+
+    pub fn load(&mut self, program: Vec<u8>) {
+        self.memory[0x8000..(0x8000 + program.len())].copy_from_slice(&program[..]);
+        self.program_counter = 0x8000;
     }
 
     fn update_zero_and_negative_flags(&mut self, result: u8) {
@@ -96,11 +118,9 @@ impl CPU {
         self.update_zero_and_negative_flags(self.register_x);
     }
 
-    pub fn interpret(&mut self, program: Vec<u8>) {
-        self.program_counter = 0;
-
+    pub fn run(&mut self) {
         loop {
-            let opscode = program[self.program_counter as usize];
+            let opscode = self.mem_read(self.program_counter);
 
             self.program_counter += 1;
 
@@ -108,7 +128,7 @@ impl CPU {
                 // LDA
                 // A,Z,N = M
                 0xA9 => {
-                    let param = program[self.program_counter as usize];
+                    let param = self.memory[self.program_counter as usize];
                     self.program_counter += 1;
                     self.lda(param);
                 }
