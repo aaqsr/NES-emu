@@ -11,8 +11,14 @@ pub struct CPU {
 // Execute the Instruction
 // Repeat the cycle
 
+impl Default for CPU {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl CPU {
-    pub fn new() -> CPU {
+    pub fn new() -> Self {
         CPU {
             register_a: 0,
             status: 0,
@@ -35,15 +41,15 @@ impl CPU {
                     self.register_a = param;
 
                     if self.register_a == 0 {
-                        self.status = self.status | 0b0000_0010;
+                        self.status |= 0b0000_0010;
                     } else {
-                        self.status = self.status & 0b1111_1101;
+                        self.status &= 0b1111_1101;
                     }
 
                     if self.register_a & 0b1000_0000 != 0 {
-                        self.status = self.status | 0b1000_0000;
+                        self.status |= 0b1000_0000;
                     } else {
-                        self.status = self.status & 0b0111_1111;
+                        self.status &= 0b0111_1111;
                     }
                 }
 
