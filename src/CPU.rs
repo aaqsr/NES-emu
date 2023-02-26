@@ -75,7 +75,7 @@ impl CPU {
     fn mem_read_u16(&mut self, pos: u16) -> u16 {
         let lo = self.mem_read(pos) as u16;
         let hi = self.mem_read(pos + 1) as u16;
-        (hi << 8) | lo
+        (hi << 8) | (lo as u16)
     }
 
     fn mem_write_u16(&mut self, pos: u16, data: u16) {
@@ -107,7 +107,6 @@ impl CPU {
         // [0x8000 .. 0xFFFF] is reserved for Program ROM
         self.memory[0x8000..(0x8000 + program.len())].copy_from_slice(&program[..]);
         self.mem_write_u16(0xFFFC, 0x8000);
-        self.program_counter = 0x8000;
     }
 
     fn update_zero_and_negative_flags(&mut self, result: u8) {
@@ -141,12 +140,7 @@ impl CPU {
     // Adds one to the X register
     // and sets the zero and negative flags as appropriate
     fn inx(&mut self) {
-        if self.register_x == 0xFF {
-            self.register_x = 0;
-            return;
-        }
-
-        self.register_x += 1;
+        self.register_x = self.register_x.wrapping_add(1);
         self.update_zero_and_negative_flags(self.register_x);
     }
 
@@ -209,8 +203,7 @@ mod tests {
     #[test]
     fn test_0xaa_tax_move_a_to_x() {
         let mut cpu = CPU::new();
-        cpu.register_a = 10;
-        cpu.load_and_run(vec![0xaa, 0x00]);
+        cpu.load_and_run(vec![0xa9, 0x0A, 0xaa, 0x00]);
 
         assert_eq!(cpu.register_x, 10)
     }
@@ -226,11 +219,11 @@ mod tests {
     #[test]
     fn test_inx_overflow() {
         let mut cpu = CPU::new();
-        cpu.register_x = 0xff;
-        cpu.load_and_run(vec![0xe8, 0xe8, 0x00]);
+        cpu.load_and_run(vec![0xa9, 0xff, 0xaa, 0xe8, 0xe8, 0x00]);
 
         assert_eq!(cpu.register_x, 1)
     }
+
     #[test]
     fn break_sets_break_register() {
         let mut cpu = CPU::new();
