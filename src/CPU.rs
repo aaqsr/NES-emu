@@ -1,6 +1,30 @@
 pub struct CPU {
+    // the accumulator
+    // stores the results of arithmetic, logic, and memory access operations
+    // used as an input parameter for some operations
     pub register_a: u8,
+
+    // stack pointer
+    // memory space [0x0100 .. 0x1FF] is used for stack
+    // holds the address of the top of that space
+    // pub stack: u8;
+
+    // index register x
+    // used as an offset in specific memory addressing modes
+    // can be used for auxiliary storage needs
+    pub register_x: u8,
+
+    // index register y
+    // similar to x
+    pub register_y: u8,
+
+    // processor status
+    // 8-bit register represents 7 status flags that can be
+    // set or unset depending on the result of the last executed instruction
     pub status: u8,
+
+    // program counter
+    // holds the address for the next machine language instruction
     pub program_counter: u16,
 }
 
@@ -21,6 +45,8 @@ impl CPU {
     pub fn new() -> Self {
         CPU {
             register_a: 0,
+            register_x: 0,
+            register_y: 0,
             status: 0,
             program_counter: 0,
         }
@@ -52,6 +78,8 @@ impl CPU {
                         self.status &= 0b0111_1111;
                     }
                 }
+
+                0xAA => {}
 
                 0x00 => return,
 
