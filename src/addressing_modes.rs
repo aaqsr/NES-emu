@@ -23,12 +23,14 @@ pub enum AddressingMode {
     Immediate,
 
     // has a size of 2 bytes, one for opcode itself, and one for a parameter
+    // the parameter is read in from the memory pointed to by the second byte
     // can't reference memory above the first 255 bytes
     // faster, as only one byte needs to be looked up
     ZeroPage,
 
     // a zero page address is given, and then the value of the X register is added
     // if the result of the addition is larger than a single byte, the address wraps around
+    // i.e: the second byte is de-referenceed and then the val of the X register is added to it
     ZeroPage_X,
 
     // same but for Y register
@@ -58,7 +60,52 @@ impl CPU {
     fn get_operand_address(&mut self, mode: &AddressingMode) -> u16 {
         match mode {
             AddressingMode::Immediate => self.program_counter,
-            _ => todo!(),
+
+            AddressingMode::ZeroPage => self.mem_read(self.program_counter),
+
+            AddressingMode::ZeroPage_X => {
+                let zero_page_addr = self.mem_read(self.program_counter);
+                zero_page_addr.wrapping_add(self.register_x) as u16
+            }
+
+            AddressingMode::ZeroPage_Y => {
+                let zero_page_addr = self.mem_read(self.program_counter);
+                zero_page_addr.wrapping_add(self.register_y) as u16
+            }
+
+            AddressingMode::Absolute => self.mem_read_u16(self.program_counter),
+
+            AddressingMode::Absolute_X => {
+                let abs_addr = self.mem_read_u16(self.program_counter);
+                abs_addr.wrapping_add(self.register_x as u16)
+            }
+
+            AddressingMode::Absolute_Y => {
+                let abs_addr = self.mem_read_u16(self.program_counter);
+                abs_addr.wrapping_add(self.register_y as u16)
+            }
+
+            AddressingMode::Indirect_X => {
+                let base = self.mem_read(self.program_counter);
+
+                let ptr: u8 = (base as u8).wrapping_add(self.register_x);
+                // note: we have to do this due to little endian
+                let lo = self.mem_read(ptr as u16);
+                let hi = self.mem_read(ptr.wrapping_add(1) as u16);
+                (hi as u16) << 8 | (lo as u16)
+            }
+
+            AddressingMode::Indirect_Y => {
+                let base = self.mem_read(self.program_counter);
+
+                let lo = self.mem_read(base as u16);
+                let hi = self.mem_read((base as u8).wrapping_add(1) as u16);
+                let deref_base = (hi as u16) << 8 | (lo as u16);
+                let deref = deref_base.wrapping_add(self.register_y as u16);
+                deref
+            }
+
+            AddressingMode::NoneAddressing => panic!("Invalid addressing mode"),
         }
     }
 }
