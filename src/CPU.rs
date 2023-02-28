@@ -71,7 +71,7 @@ impl CPU {
 
     // NES CPU uses Little-Endian addressing.
     // 8 least significant bits of an address will be stored before the 8 most significant bits
-    // eg: LDA $8000      <=>    ad 00 80
+    // eg: LDA $8000     <=>    ad 00 80
     fn mem_read_u16(&mut self, pos: u16) -> u16 {
         let lo = self.mem_read(pos) as u16;
         let hi = self.mem_read(pos + 1) as u16;
