@@ -1,3 +1,4 @@
+#[allow(non_snake_case)]
 pub struct CPU {
     // the accumulator
     // stores the results of arithmetic, logic, and memory access operations
@@ -61,7 +62,7 @@ impl CPU {
         }
     }
 
-    fn mem_read(&self, addr: u16) -> u8 {
+    pub fn mem_read(&self, addr: u16) -> u8 {
         self.memory[addr as usize]
     }
 
@@ -72,7 +73,7 @@ impl CPU {
     // NES CPU uses Little-Endian addressing.
     // 8 least significant bits of an address will be stored before the 8 most significant bits
     // eg: LDA $8000     <=>    ad 00 80
-    fn mem_read_u16(&mut self, pos: u16) -> u16 {
+    pub fn mem_read_u16(&mut self, pos: u16) -> u16 {
         let lo = self.mem_read(pos) as u16;
         let hi = self.mem_read(pos + 1) as u16;
         (hi << 8) | (lo as u16)

@@ -1,4 +1,4 @@
-use super::*;
+use crate::CPU::CPU;
 
 // The NES was nice enough to use different addressing modes
 // i.e different ways to get a parameter for an instruction
@@ -14,6 +14,7 @@ use super::*;
 
 #[derive(Debug)]
 #[allow(non_camel_case_types)]
+#[allow(dead_code)]
 pub enum AddressingMode {
     // actual values are used
     // For example,
@@ -61,7 +62,7 @@ impl CPU {
         match mode {
             AddressingMode::Immediate => self.program_counter,
 
-            AddressingMode::ZeroPage => self.mem_read(self.program_counter),
+            AddressingMode::ZeroPage => self.mem_read(self.program_counter).into(),
 
             AddressingMode::ZeroPage_X => {
                 let zero_page_addr = self.mem_read(self.program_counter);
