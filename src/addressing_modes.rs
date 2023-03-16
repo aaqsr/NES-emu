@@ -102,8 +102,7 @@ impl CPU {
                 let lo = self.mem_read(base as u16);
                 let hi = self.mem_read((base as u8).wrapping_add(1) as u16);
                 let deref_base = (hi as u16) << 8 | (lo as u16);
-                let deref = deref_base.wrapping_add(self.register_y as u16);
-                deref
+                deref_base.wrapping_add(self.register_y as u16)
             }
 
             AddressingMode::NoneAddressing => panic!("Invalid addressing mode"),
