@@ -105,7 +105,9 @@ impl CPU {
                 deref_base.wrapping_add(self.register_y as u16)
             }
 
-            AddressingMode::NoneAddressing => panic!("Invalid addressing mode"),
+            AddressingMode::NoneAddressing => {
+                panic!("Invalid addressing mode! Mode: {:?} is not supported", mode)
+            }
         }
     }
 }
