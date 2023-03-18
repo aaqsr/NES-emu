@@ -1,6 +1,7 @@
 #[allow(non_snake_case)]
 pub mod CPU;
 mod addressing_modes;
+mod opcodes;
 // mod temp;
 
 // #[cfg(test)]
