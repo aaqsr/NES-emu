@@ -4,6 +4,7 @@ mod addressing_modes;
 mod opcodes;
 mod memory;
 mod tests;
+mod instructions;
 // mod temp;
 
 // #[cfg(test)]
