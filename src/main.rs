@@ -2,6 +2,8 @@
 pub mod CPU;
 mod addressing_modes;
 mod opcodes;
+mod memory;
+mod tests;
 // mod temp;
 
 // #[cfg(test)]

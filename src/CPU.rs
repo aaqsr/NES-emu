@@ -1,3 +1,9 @@
+use crate::addressing_modes::AddressingMode;
+use crate::memory::Mem;
+use crate::opcodes;
+
+use std::collections::HashMap;
+
 #[allow(non_snake_case)]
 pub struct CPU {
     // the accumulator
@@ -34,7 +40,8 @@ pub struct CPU {
 
     // temporary ram
     // CPU has only 2 KiB of RAM, and everything else is reserved for memory mapping
-    memory: [u8; 0xFFFF],
+    pub(super) memory: [u8; 0xFFFF],
+    // pub super so that memory trait can be implemented elsewhere
 }
 
 // CPU works in a constant cycle:
@@ -62,29 +69,7 @@ impl CPU {
         }
     }
 
-    pub fn mem_read(&self, addr: u16) -> u8 {
-        self.memory[addr as usize]
-    }
-
-    fn mem_write(&mut self, addr: u16, data: u8) {
-        self.memory[addr as usize] = data;
-    }
-
-    // NES CPU uses Little-Endian addressing.
-    // 8 least significant bits of an address will be stored before the 8 most significant bits
-    // eg: LDA $8000     <=>    ad 00 80
-    pub fn mem_read_u16(&mut self, pos: u16) -> u16 {
-        let lo = self.mem_read(pos) as u16;
-        let hi = self.mem_read(pos + 1) as u16;
-        (hi << 8) | (lo as u16)
-    }
-
-    fn mem_write_u16(&mut self, pos: u16, data: u16) {
-        let hi = (data >> 8) as u8;
-        let lo = (data & 0xFF) as u8;
-        self.mem_write(pos, lo);
-        self.mem_write(pos + 1, hi);
-    }
+    // Device operations
 
     // inserting a new cartridge -> CPU receives a special signal called "Reset interrupt"
     // instructs CPU to:
@@ -110,6 +95,8 @@ impl CPU {
         self.mem_write_u16(0xFFFC, 0x8000);
     }
 
+    // Command Helpers
+
     fn update_zero_and_negative_flags(&mut self, result: u8) {
         if result == 0 {
             self.status |= 0b0000_0010;
@@ -124,11 +111,22 @@ impl CPU {
         }
     }
 
+    // Commands
+
     // Loads a byte of memory (value) into the accumulator
     // and sets the zero and negative flags as appropriate
-    fn lda(&mut self, value: u8) {
+    fn lda(&mut self, mode: &AddressingMode) {
+        let addr = self.get_operand_address(&mode);
+        let value = self.mem_read(addr);
+
         self.register_a = value;
         self.update_zero_and_negative_flags(self.register_a);
+    }
+
+    // Store address into register A
+    fn sta(&mut self, mode: &AddressingMode) {
+        let addr = self.get_operand_address(mode);
+        self.mem_write(addr, self.register_a);
     }
 
     // Copies the current contents of the accumulator into the X register
@@ -146,89 +144,38 @@ impl CPU {
     }
 
     pub fn run(&mut self) {
+        let ref opcodes: HashMap<u8, &'static opcodes::OpCode> = *opcodes::OPCODES_MAP;
+
         loop {
-            let opscode = self.mem_read(self.program_counter);
-
+            let code = self.mem_read(self.program_counter);
             self.program_counter += 1;
+            let program_counter_state = self.program_counter;
 
-            match opscode {
-                // LDA
-                // A,Z,N = M
-                0xA9 => {
-                    let param = self.memory[self.program_counter as usize];
-                    self.program_counter += 1;
-                    self.lda(param);
+            let opcode = opcodes
+                .get(&code)
+                .expect(&format!("OpCode {:x} is not recognized", code));
+
+            match code {
+                0xa9 | 0xa5 | 0xb5 | 0xad | 0xbd | 0xb9 | 0xa1 | 0xb1 => {
+                    self.lda(&opcode.mode);
                 }
 
-                // TAX
-                // X = A
+                /* STA */
+                0x85 | 0x95 | 0x8d | 0x9d | 0x99 | 0x81 | 0x91 => {
+                    self.sta(&opcode.mode);
+                }
+
                 0xAA => self.tax(),
-
-                // INX
-                // X,Z,N = X+1
-                0xE8 => self.inx(),
-
-                // BRK
-                // stop execution
-                0x00 => {
-                    self.status |= 0b0010_0000;
-                    return;
-                }
-
+                0xe8 => self.inx(),
+                0x00 => return,
                 _ => todo!(),
+            }
+
+            if program_counter_state == self.program_counter {
+                self.program_counter += (opcode.len - 1) as u16;
             }
         }
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
 
-    #[test]
-    fn test_0xa9_lda_immidiate_load_data() {
-        let mut cpu = CPU::new();
-        cpu.load_and_run(vec![0xa9, 0x05, 0x00]);
-        assert_eq!(cpu.register_a, 0x05);
-        assert!(cpu.status & 0b0000_0010 == 0b00);
-        assert!(cpu.status & 0b1000_0000 == 0);
-    }
-
-    #[test]
-    fn test_0xa9_lda_zero_flag() {
-        let mut cpu = CPU::new();
-        cpu.load_and_run(vec![0xa9, 0x00, 0x00]);
-        assert!(cpu.status & 0b0000_0010 == 0b10);
-    }
-
-    #[test]
-    fn test_0xaa_tax_move_a_to_x() {
-        let mut cpu = CPU::new();
-        cpu.load_and_run(vec![0xa9, 0x0A, 0xaa, 0x00]);
-
-        assert_eq!(cpu.register_x, 10)
-    }
-
-    #[test]
-    fn test_5_ops_working_together() {
-        let mut cpu = CPU::new();
-        cpu.load_and_run(vec![0xa9, 0xc0, 0xaa, 0xe8, 0x00]);
-
-        assert_eq!(cpu.register_x, 0xc1)
-    }
-
-    #[test]
-    fn test_inx_overflow() {
-        let mut cpu = CPU::new();
-        cpu.load_and_run(vec![0xa9, 0xff, 0xaa, 0xe8, 0xe8, 0x00]);
-
-        assert_eq!(cpu.register_x, 1)
-    }
-
-    #[test]
-    fn break_sets_break_register() {
-        let mut cpu = CPU::new();
-        cpu.load_and_run(vec![0x00]);
-        assert_ne!(cpu.status & 0b0010_0000, 0);
-    }
-}

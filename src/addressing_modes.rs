@@ -1,4 +1,5 @@
 use crate::CPU::CPU;
+use crate::memory::Mem;
 
 // The NES was nice enough to use different addressing modes
 // i.e different ways to get a parameter for an instruction
@@ -58,7 +59,7 @@ pub enum AddressingMode {
 }
 
 impl CPU {
-    fn get_operand_address(&mut self, mode: &AddressingMode) -> u16 {
+    pub(super) fn get_operand_address(&mut self, mode: &AddressingMode) -> u16 {
         match mode {
             AddressingMode::Immediate => self.program_counter,
 
