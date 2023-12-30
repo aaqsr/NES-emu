@@ -1,3 +1,5 @@
+#[cfg(test)]
+
 use crate::CPU::CPU;
 
 #[test]
