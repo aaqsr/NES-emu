@@ -1,8 +1,43 @@
+#[allow(unused_imports)]
 use crate::addressing_modes::AddressingMode;
 use crate::memory::Mem;
 use crate::opcodes;
 
+use bitflags::bitflags;
+
 use std::collections::HashMap;
+
+// Very cool crate!
+bitflags! {
+    // processor status
+    // 8-bit register represents 7 status flags that can be
+    // set or unset depending on the result of the last executed instruction
+    //
+    // In order from right to left,
+    // Carry Flag, Zero Flag, Interrupt Disable, Decimal Mode Flag
+    // Break Command, Overflow Flag, Negative Flag
+    //
+    //  7 6 5 4 3 2 1 0
+    //  N V _ B D I Z C
+    //  | |   | | | | +--- Carry Flag
+    //  | |   | | | +----- Zero Flag
+    //  | |   | | +------- Interrupt Disable
+    //  | |   | +--------- Decimal Mode (not used on NES)
+    //  | |   +----------- Break Command
+    //  | +--------------- Overflow Flag
+    //  +----------------- Negative Flag
+
+    pub struct CPUFlags: u8 {
+        const CARRY             = 0b00000001;
+        const ZERO              = 0b00000010;
+        const INTERRUPT_DISABLE = 0b00000100;
+        const DECIMAL_MODE      = 0b00001000;
+        const BREAK             = 0b00010000;
+        const BREAK2            = 0b00100000;
+        const OVERFLOW          = 0b01000000;
+        const NEGATIV           = 0b10000000;
+    }
+}
 
 #[allow(non_snake_case)]
 pub struct CPU {
@@ -26,13 +61,7 @@ pub struct CPU {
     pub register_y: u8,
 
     // processor status
-    // 8-bit register represents 7 status flags that can be
-    // set or unset depending on the result of the last executed instruction
-    //
-    // In order from right to left,
-    // Carry Flag, Zero Flag, Interrupt Disable, Decimal Mode Flag
-    // Break Command, Overflow Flag, Negative Flag
-    pub status: u8,
+    pub status: CPUFlags,
 
     // program counter
     // holds the address for the next machine language instruction
@@ -63,7 +92,7 @@ impl CPU {
             register_a: 0,
             register_x: 0,
             register_y: 0,
-            status: 0,
+            status: CPUFlags::from_bits_truncate(0b100100),
             program_counter: 0,
             memory: [0; 0xFFFF],
         }
@@ -78,7 +107,7 @@ impl CPU {
     pub fn reset(&mut self) {
         self.register_a = 0;
         self.register_x = 0;
-        self.status = 0;
+        self.status = CPUFlags::from_bits_truncate(0b100100);
 
         self.program_counter = self.mem_read_u16(0xFFFC);
     }
