@@ -11,6 +11,6 @@ mod tests;
 // mod tests;
 
 fn main() {
-  // bugzmanov.github.io/nes_ebook/
-  println!("Hello, world!");
+    // bugzmanov.github.io/nes_ebook/
+    println!("Hello, world!");
 }
