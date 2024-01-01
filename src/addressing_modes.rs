@@ -13,7 +13,7 @@ use crate::CPU::CPU;
 // CPU instruction size can be either 1, 2, or 3 bytes.
 // no opcodes that occupy more than 3 bytes
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 #[allow(non_camel_case_types)]
 #[allow(dead_code)]
 pub enum AddressingMode {

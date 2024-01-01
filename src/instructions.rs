@@ -7,17 +7,11 @@ impl CPU {
     // Command Helpers
 
     fn update_zero_and_negative_flags(&mut self, result: u8) {
-        if result == 0 {
-            self.status.insert(CPUFlags::ZERO);
-        } else {
-            self.status.remove(CPUFlags::ZERO);
-        }
+        // If 0 then set zero
+        self.status.set(CPUFlags::ZERO, result == 0);
 
-        if result & 0b1000_0000 != 0 {
-            self.status.insert(CPUFlags::NEGATIV);
-        } else {
-            self.status.remove(CPUFlags::NEGATIV);
-        }
+        // if negative then set negative
+        self.status.set(CPUFlags::NEGATIV, result >> 7 == 1);
     }
 
     // set if the result has yielded an invalid 2's complement result
@@ -47,11 +41,9 @@ impl CPU {
         //
         // And then if we did not overflow then r7 = 1, and x7 XOR r7 = 0, y7 XOR r7 = 10
         // and a similar argument follows.
-        if (arg1 ^ result) & (arg2 ^ result) & 0b1000_0000 != 0 {
-            self.status.insert(CPUFlags::OVERFLOW)
-        } else {
-            self.status.remove(CPUFlags::OVERFLOW)
-        }
+        let condition = (arg1 ^ result) & (arg2 ^ result) & 0b1000_0000 != 0;
+
+        self.status.set(CPUFlags::OVERFLOW, condition)
     }
 
     fn add_to_reg_a(&mut self, arg: u8) {
@@ -61,11 +53,7 @@ impl CPU {
             + (self.status.contains(CPUFlags::CARRY) as u16);
 
         // So we can check for carry by comparing with largest u8
-        if bigres > 0xff {
-            self.status.insert(CPUFlags::CARRY)
-        } else {
-            self.status.remove(CPUFlags::CARRY)
-        }
+        self.status.set(CPUFlags::CARRY, bigres > 0xff);
 
         // truncating conversion
         let res = bigres as u8;
@@ -78,11 +66,36 @@ impl CPU {
 
     // Commands
 
-    // adds the contents of a memory location to the accumulator together with the carry bit. If overflow occurs the carry bit is set, this enables multiple byte addition to be performed.
+    // Adds the contents of a memory location to the accumulator together with the carry bit.
+    // If overflow occurs the carry bit is set, this enables multiple byte addition to be performed.
     pub(super) fn adc(&mut self, mode: &AddressingMode) {
         let addr = self.get_operand_address(mode);
         let value = self.mem_read(addr);
         self.add_to_reg_a(value);
+    }
+
+    // logical AND on the accumulator contents using the contents of a byte of memory
+    pub(super) fn and(&mut self, mode: &AddressingMode) {
+        let addr = self.get_operand_address(mode);
+        let value = self.mem_read(addr);
+
+        self.register_a = value & self.register_a;
+        self.update_zero_and_negative_flags(self.register_a);
+    }
+
+    // shifts all the bits of the accumulator or memory contents one bit left
+    // Bit 0 is set to 0 and bit 7 is placed in the carry flag
+    pub(super) fn asl(&mut self, mode: AddressingMode) {
+        let value: u8 = if mode == AddressingMode::NoneAddressing {
+            // we have to deal with the accumulator
+            self.register_a
+        } else {
+            // Read from memory
+            let addr = self.get_operand_address(&mode);
+            self.mem_read(addr)
+        };
+
+        self.status.set(CPUFlags::CARRY, value >> 7 == 1);
     }
 
     // Loads a byte of memory (value) into the accumulator
