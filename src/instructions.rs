@@ -83,19 +83,26 @@ impl CPU {
         self.update_zero_and_negative_flags(self.register_a);
     }
 
+    fn bit_shift_left_and_set_flags(&mut self, value: u8) -> u8 {
+        // Set carry flag
+        self.status.set(CPUFlags::CARRY, value >> 7 == 1);
+        let res = value << 1;
+        self.update_zero_and_negative_flags(res);
+        res
+    }
+
     // shifts all the bits of the accumulator or memory contents one bit left
     // Bit 0 is set to 0 and bit 7 is placed in the carry flag
-    pub(super) fn asl(&mut self, mode: AddressingMode) {
-        let value: u8 = if mode == AddressingMode::NoneAddressing {
+    pub(super) fn asl(&mut self, mode: &AddressingMode) {
+        if *mode == AddressingMode::NoneAddressing {
             // we have to deal with the accumulator
-            self.register_a
+            self.register_a = self.bit_shift_left_and_set_flags(self.register_a);
         } else {
             // Read from memory
             let addr = self.get_operand_address(&mode);
-            self.mem_read(addr)
+            let res = self.bit_shift_left_and_set_flags(self.mem_read(addr));
+            self.mem_write(addr, res);
         };
-
-        self.status.set(CPUFlags::CARRY, value >> 7 == 1);
     }
 
     // Loads a byte of memory (value) into the accumulator
