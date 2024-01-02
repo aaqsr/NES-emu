@@ -99,8 +99,10 @@ impl CPU {
             self.register_a = self.bit_shift_left_and_set_flags(self.register_a);
         } else {
             // Read from memory
-            let addr = self.get_operand_address(&mode);
-            let res = self.bit_shift_left_and_set_flags(self.mem_read(addr));
+            let addr = self.get_operand_address(mode);
+            let val = self.mem_read(addr);
+            let res = self.bit_shift_left_and_set_flags(val);
+            // println!("writing at {addr}: val was {val}, res is {res}");
             self.mem_write(addr, res);
         };
     }
