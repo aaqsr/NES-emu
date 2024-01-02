@@ -1,6 +1,6 @@
+use crate::CPU::CPUFlags;
 #[cfg(test)]
 use crate::CPU::CPU;
-use crate::CPU::CPUFlags;
 
 // Pro tip: Use the mac os calculator in programmer mode by going to View > Programmer
 
@@ -12,7 +12,7 @@ fn test_add_with_carry_overflow() {
         0x40, // 64
         0x69, // adc
         0x40, // 64
-        0x00 // brk
+        0x00, // brk
     ]);
 
     assert_eq!(cpu.register_a, 0x80);
@@ -25,11 +25,9 @@ fn test_asl_adc_carry() {
     let mut cpu = CPU::new();
     cpu.load_and_run(vec![
         0xA9, // lda
-        0x60,
-        0x0A, // asl of acc
+        0x60, 0x0A, // asl of acc
         0x69, // adc
-        0xC0,
-        0x00  // brk
+        0xC0, 0x00, // brk
     ]);
 
     assert_eq!(cpu.register_a, 0x80); // 0x180
@@ -38,25 +36,40 @@ fn test_asl_adc_carry() {
 }
 
 #[test]
-fn test_asl_adc_carry_overflow() {
+fn test_asl_adc_carry_2() {
     let mut cpu = CPU::new();
     // NES CPU uses Little-Endian addressing!
     cpu.load_and_run(vec![
-        0xA9,  // lda
-        0xFE,
-        0x0E,  // asl in absolute
-        0x09,  // memory address of val bottom
-        0x80,  // memory address of val top
-        0x6D,  // adc in absolute
-        0x09,  // memory address of val bottom
-        0x80,  // mem address of val top
-        0x00,  // brk
-        0x7F   // 127
+        0xA9, // lda
+        0xFE, // value
+        0x0E, // asl in absolute
+        0x09, // memory address of val bottom
+        0x80, // memory address of val top
+        0x6D, // adc in absolute
+        0x09, // memory address of val bottom
+        0x80, // mem address of val top
+        0x00, // brk
+        0x7F, // 127
     ]);
 
     assert_eq!(cpu.register_a, 0xFC); // should be 0x1FC truncated
     assert!(cpu.status.contains(CPUFlags::CARRY));
     assert!(!cpu.status.contains(CPUFlags::OVERFLOW));
+}
+
+#[test]
+fn test_and() {
+    let mut cpu = CPU::new();
+    cpu.load_and_run(vec![
+        0xA9, // lda
+        0xFF, // all 1s
+        0x29, // AND
+        0xA0, // 1010 0000
+        0x00
+    ]);
+
+    assert_eq!(cpu.register_a, 0xA0);
+    assert!(cpu.status.contains(CPUFlags::NEGATIV));
 }
 
 #[test]
