@@ -143,13 +143,23 @@ impl CPU {
 
                 0x0A | 0x06 | 0x16 | 0x0E | 0x1E => self.asl(&opcode.mode),
 
+                // Branching
+                0x90 => self.bcc(),
+                0xB0 => self.bcs(),
+                0xF0 => self.beq(),
+                0x30 => self.bmi(),
+                0xD0 => self.bne(),
+                0x10 => self.bpl(),
+
+                // Break but wrong
+                0x00 => return,
+
                 0xa9 | 0xa5 | 0xb5 | 0xad | 0xbd | 0xb9 | 0xa1 | 0xb1 => self.lda(&opcode.mode),
 
                 0x85 | 0x95 | 0x8d | 0x9d | 0x99 | 0x81 | 0x91 => self.sta(&opcode.mode),
 
                 0xAA => self.tax(),
                 0xe8 => self.inx(),
-                0x00 => return,
                 _ => todo!(),
             }
 

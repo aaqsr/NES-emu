@@ -107,6 +107,52 @@ impl CPU {
         };
     }
 
+    // if predicate if true then add the relative displacement to the program counter
+    // to cause a branch to a new location
+    fn add_next_val_to_pc_if(&mut self, predicate: bool) {
+        if predicate {
+            let jmp = self.mem_read(self.program_counter);
+            self.program_counter = self
+                .program_counter
+                .wrapping_add(1)
+                .wrapping_add(jmp as u16);
+        }
+    }
+
+    // branch if the carry flag is clear
+    pub(super) fn bcc(&mut self) {
+        self.add_next_val_to_pc_if(!self.status.contains(CPUFlags::CARRY));
+    }
+
+    // branch if the carry flag is set
+    pub(super) fn bcs(&mut self) {
+        self.add_next_val_to_pc_if(self.status.contains(CPUFlags::CARRY));
+    }
+
+    // branch if the zero flag is set
+    pub(super) fn beq(&mut self) {
+        self.add_next_val_to_pc_if(self.status.contains(CPUFlags::ZERO));
+    }
+
+    // branch if the negative flag is set
+    pub(super) fn bmi(&mut self) {
+        self.add_next_val_to_pc_if(self.status.contains(CPUFlags::NEGATIV));
+    }
+
+    // branch if the zero flag is clear
+    pub(super) fn bne(&mut self) {
+        self.add_next_val_to_pc_if(!self.status.contains(CPUFlags::ZERO));
+    }
+
+    // branch if the negative flag is clear
+    pub(super) fn bpl(&mut self) {
+        self.add_next_val_to_pc_if(!self.status.contains(CPUFlags::NEGATIV));
+    }
+
+    pub(super) fn bit(&mut self) {
+
+    }
+
     // Loads a byte of memory (value) into the accumulator
     // and sets the zero and negative flags as appropriate
     pub(super) fn lda(&mut self, mode: &AddressingMode) {
