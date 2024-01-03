@@ -4,7 +4,9 @@ mod memory;
 mod opcodes;
 
 #[allow(unused_imports)]
-use crate::CPU::{addressing_modes::AddressingMode, memory::Mem, opcodes::OPCODES_MAP, instructions::*};
+use crate::CPU::{
+    addressing_modes::AddressingMode, instructions::*, memory::Mem, opcodes::OPCODES_MAP,
+};
 
 use bitflags::bitflags;
 

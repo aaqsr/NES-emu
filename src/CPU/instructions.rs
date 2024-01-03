@@ -1,7 +1,9 @@
 use crate::CPU::AddressingMode;
-use crate::CPU::Mem;
 use crate::CPU::CPUFlags;
+use crate::CPU::Mem;
 use crate::CPU::CPU;
+
+#[allow(dead_code)]
 
 impl CPU {
     // Command Helpers

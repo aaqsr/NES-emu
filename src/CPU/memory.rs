@@ -32,4 +32,3 @@ impl Mem for CPU {
         self.memory[addr as usize] = data;
     }
 }
-
