@@ -149,8 +149,40 @@ impl CPU {
         self.add_next_val_to_pc_if(!self.status.contains(CPUFlags::NEGATIV));
     }
 
-    pub(super) fn bit(&mut self) {
+    // branch if overflow flag is clear
+    pub(super) fn bvc(&mut self) {
+        self.add_next_val_to_pc_if(!self.status.contains(CPUFlags::OVERFLOW));
+    }
 
+    // branch if overflow flag is set
+    pub(super) fn bvs(&mut self) {
+        self.add_next_val_to_pc_if(self.status.contains(CPUFlags::OVERFLOW));
+    }
+
+    // Test if one or more bits are set in a target memory location
+    // Mask pattern in A is ANDed with the value in memory to set or clear the zero flag,
+    // but the result is not kept
+    // Bits 6 and 7 of the value from memory are copied into the V and N flags
+    pub(super) fn bit(&mut self, mode: &AddressingMode) {
+        let addr = self.get_operand_address(mode);
+        let value = self.mem_read(addr);
+
+        if (self.register_a & value) == 0 {
+            self.status.insert(CPUFlags::ZERO);
+        } else {
+            self.status.remove(CPUFlags::ZERO);
+        }
+
+        self.status.set(CPUFlags::OVERFLOW, value >> 6 == 1);
+        self.status.set(CPUFlags::NEGATIV, value >> 7 == 1);
+    }
+
+    // Forces the generation of an interrupt request
+    // Program counter and processor status are pushed on the stack
+    // IRQ interrupt vector at $FFFE/F is loaded into PC
+    // and the break flag is set to one
+    pub(super) fn brk(&mut self) {
+        todo!();
     }
 
     // Loads a byte of memory (value) into the accumulator
