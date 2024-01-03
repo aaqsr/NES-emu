@@ -69,8 +69,19 @@ pub struct CPU {
 
     // temporary ram
     // CPU has only 2 KiB of RAM, and everything else is reserved for memory mapping
-    pub(super) memory: [u8; 0xFFFF],
+    memory: [u8; 0xFFFF],
     // pub super so that memory trait can be implemented elsewhere
+}
+
+impl Mem for CPU {
+    fn mem_read(&self, addr: u16) -> u8 {
+        self.memory[addr as usize]
+    }
+
+    // Write the data to the specified address
+    fn mem_write(&mut self, addr: u16, data: u8) {
+        self.memory[addr as usize] = data;
+    }
 }
 
 // CPU works in a constant cycle:
