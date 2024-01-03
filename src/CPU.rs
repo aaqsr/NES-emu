@@ -166,7 +166,6 @@ impl CPU {
                 0x00 => return,
 
                 0x18 => self.clc(),
-
                 0xD8 => self.cld(),
 
                 0xa9 | 0xa5 | 0xb5 | 0xad | 0xbd | 0xb9 | 0xa1 | 0xb1 => self.lda(mode),
