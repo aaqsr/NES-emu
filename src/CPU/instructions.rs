@@ -195,6 +195,14 @@ impl CPU {
         self.status.remove(CPUFlags::DECIMAL_MODE);
     }
 
+    pub(super) fn cli(&mut self) {
+        self.status.remove(CPUFlags::INTERRUPT_DISABLE);
+    }
+
+    pub(super) fn clv(&mut self) {
+        self.status.remove(CPUFlags::OVERFLOW);
+    }
+
     // Loads a byte of memory (value) into the accumulator
     // and sets the zero and negative flags as appropriate
     pub(super) fn lda(&mut self, mode: &AddressingMode) {
