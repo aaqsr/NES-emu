@@ -22,3 +22,14 @@ pub trait Mem {
     }
 }
 
+impl Mem for CPU {
+    fn mem_read(&self, addr: u16) -> u8 {
+        self.memory[addr as usize]
+    }
+
+    // Write the data to the specified address
+    fn mem_write(&mut self, addr: u16, data: u8) {
+        self.memory[addr as usize] = data;
+    }
+}
+

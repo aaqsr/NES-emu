@@ -1,5 +1,5 @@
-use crate::addressing_modes::AddressingMode;
-use crate::memory::Mem;
+use crate::CPU::AddressingMode;
+use crate::CPU::Mem;
 use crate::CPU::CPUFlags;
 use crate::CPU::CPU;
 
@@ -190,7 +190,7 @@ impl CPU {
     }
 
     pub(super) fn cld(&mut self) {
-        // self
+        self.status.remove(CPUFlags::DECIMAL_MODE);
     }
 
     // Loads a byte of memory (value) into the accumulator

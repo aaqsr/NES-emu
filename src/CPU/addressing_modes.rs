@@ -1,5 +1,4 @@
-use crate::memory::Mem;
-use crate::CPU::CPU;
+use crate::CPU::{Mem, CPU};
 
 // The NES was nice enough to use different addressing modes
 // i.e different ways to get a parameter for an instruction

@@ -1,6 +1,6 @@
-use crate::CPU::CPUFlags;
 #[cfg(test)]
-use crate::CPU::CPU;
+
+use crate::CPU::{CPU, CPUFlags};
 
 // Pro tip: Use the mac os calculator in programmer mode by going to View > Programmer
 

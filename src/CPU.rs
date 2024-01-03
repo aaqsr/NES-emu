@@ -1,7 +1,10 @@
+mod addressing_modes;
+mod instructions;
+mod memory;
+mod opcodes;
+
 #[allow(unused_imports)]
-use crate::addressing_modes::AddressingMode;
-use crate::memory::Mem;
-use crate::opcodes;
+use crate::CPU::{addressing_modes::AddressingMode, memory::Mem, opcodes::OPCODES_MAP, instructions::*};
 
 use bitflags::bitflags;
 
@@ -73,17 +76,6 @@ pub struct CPU {
     // pub super so that memory trait can be implemented elsewhere
 }
 
-impl Mem for CPU {
-    fn mem_read(&self, addr: u16) -> u8 {
-        self.memory[addr as usize]
-    }
-
-    // Write the data to the specified address
-    fn mem_write(&mut self, addr: u16, data: u8) {
-        self.memory[addr as usize] = data;
-    }
-}
-
 // CPU works in a constant cycle:
 
 // Fetch next execution instruction from the instruction memory
@@ -136,7 +128,7 @@ impl CPU {
     }
 
     pub fn run(&mut self) {
-        let ref opcodes: HashMap<u8, &'static opcodes::OpCode> = *opcodes::OPCODES_MAP;
+        let ref opcodes: HashMap<u8, &'static opcodes::OpCode> = *OPCODES_MAP;
 
         loop {
             let code = self.mem_read(self.program_counter);
@@ -168,10 +160,12 @@ impl CPU {
 
                 0x24 | 0x2C => self.bit(mode),
 
-                0x18 => self.clc(),
-
                 // Break but wrong
                 0x00 => return,
+
+                0x18 => self.clc(),
+
+                0xD8 => self.cld(),
 
                 0xa9 | 0xa5 | 0xb5 | 0xad | 0xbd | 0xb9 | 0xa1 | 0xb1 => self.lda(mode),
 

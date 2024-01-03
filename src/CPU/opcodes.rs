@@ -1,6 +1,6 @@
 use lazy_static::lazy_static;
 
-use crate::addressing_modes::AddressingMode;
+use crate::CPU::AddressingMode;
 use std::collections::HashMap;
 
 pub struct OpCode {
