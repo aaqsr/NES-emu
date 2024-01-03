@@ -185,6 +185,10 @@ impl CPU {
         todo!();
     }
 
+    pub(super) fn clc(&mut self) {
+        self.status.remove(CPUFlags::CARRY);
+    }
+
     // Loads a byte of memory (value) into the accumulator
     // and sets the zero and negative flags as appropriate
     pub(super) fn lda(&mut self, mode: &AddressingMode) {

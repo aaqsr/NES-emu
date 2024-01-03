@@ -157,6 +157,8 @@ impl CPU {
 
                 0x24 | 0x2C => self.bit(mode),
 
+                0x18 => self.clc(),
+
                 // Break but wrong
                 0x00 => return,
 
